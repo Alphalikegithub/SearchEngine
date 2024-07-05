@@ -1,0 +1,12 @@
+https://github.com/redis/hiredis
+git clone https://github.com/redis/hiredis.git
+tar -xzvf hiredis.tar.gz
+cd hiredis
+make
+sudo make install //将可执行程序赋值到/usr/local/bin目录中，当执行程序中就不要输入完
+整的路径
+sudo ldconfig (更新动态库配置文件) /usr/local/lib
+make test //测试redis是否编译正确
+//编译时需要加上的后缀
+g++ xxx.c -o xxx -I /usr/local/include/hiredis -lhiredis
+或者直接g++ xxx.cc -lhiredis

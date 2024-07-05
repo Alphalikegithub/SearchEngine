@@ -1,0 +1,1251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel>
+<title>Programming via 710988203 on Inoreader</title>
+<link>https://www.inoreader.com/stream/user/1005148177/tag/Programming/view/html</link>
+<description><![CDATA[]]></description>
+<atom:link href="https://www.inoreader.com/stream/user/1005148177/tag/Programming" rel="self" type="application/rss+xml"></atom:link>
+<generator>Inoreader (https://www.inoreader.com)</generator>
+<pubDate>Sun, 07 May 2023 17:09:45 +0000</pubDate>
+<lastBuildDate>Sun, 07 May 2023 17:09:45 +0000</lastBuildDate>
+<language>en-US</language>
+<item>
+<title>Moshe Zadka: Safe, Simple, Automatic Releases</title>
+<link>https://orbifold.xyz/ssa-releases.html</link>
+<description><![CDATA[<p>Two words that strike fear in the heart of 
+every software developer: 
+"release process". 
+Whether deploying a new version of a 
+billion-person social network 
+or a 
+tiny little open source library, 
+release processes are often 
+manual, 
+complicated, 
+and 
+easy to mess up.</p> 
+<p>Much has been said on the 
+"new version of a billion-person 
+social network" 
+side. 
+But what about those small, 
+barely a person, 
+open source libraries?</p> 
+<p>The focus here will be on</p> 
+<ul> 
+<li>Open source</li> 
+<li>Python libraries</li> 
+</ul> 
+<div> 
+<h2>Automatic</h2> 
+<p>A new version? 
+What is the number?</p> 
+<p>As 
+<a href="https://orbifold.xyz/fifty-shades.html">already explored</a>, 
+CalVer 
+works better than 
+SemVer. 
+So you already know 
+<em>something</em> 
+about the version.</p> 
+<p>With most standard 
+<a href="https://calver.org/">CalVer</a> 
+schemes, 
+the version starts with 
+<tt><span>&lt;Year&gt;.&lt;Month&gt;</span></tt>. 
+For example, 
+something released 
+in April 2023 
+would be 
+<tt><span>2023.04....</span></tt></p> 
+<p>One option is to choose as the last digit 
+a running number of releases in the month. 
+So, 
+<tt>2023.4.3</tt> 
+would be the third release in 
+April 2023. 
+This means that when assigning the version, 
+you have to look and see what previous releases, 
+if any, 
+happened this month.</p> 
+<p>More stateless is to choose the day. 
+However, 
+this means it is impossible to release more 
+than once per day. 
+This can be 
+<em>literally irresponsible</em>: 
+what happens if you need to quickly patch up 
+a major goof?</p> 
+<p>There is another, 
+sneakier, 
+option. 
+It is to take advantage that Python version standard 
+does 
+<em>not</em> 
+mandate only three parts to the version.</p> 
+<p>For example, 
+<tt>2023.4.27.3</tt> 
+could be the third release 
+in April 27th, 2023. 
+Having to quickly release 
+<em>two</em> 
+versions sounds stressful, 
+and I'm sorry someone had to experience that.</p> 
+<p>On top of all the stress, 
+they had to have the presence of mind to check 
+how many releases already happened today. 
+This sounds like heaping misery on top of an 
+already stressful situation.</p> 
+<p>Can we do better? 
+Go completely stateless? 
+Yes, 
+we can.</p> 
+<p><a href="https://autocalver.readthedocs.io/en/latest/">Autocalver</a> will assign versions to packages using 
+<tt><span>&lt;Year&gt;.&lt;Month&gt;.&lt;Day&gt;.&lt;Seconds</span> from beginning of day&gt;</tt>. 
+The last number is only a little bit useful, 
+but does serve as an increasing counter. 
+The timestamp is taken from the 
+<em>commit log</em>, 
+not the 
+<em>build time</em>, 
+so builds are reproducible.</p> 
+</div> 
+<div> 
+<h2>Safe</h2> 
+<p>"Three may keep a Secret, if two of them are dead.", 
+Benjamin Franklin, 
+Poor Richard's Almanac, 1735.</p> 
+<p>Uploading your package to PyPI safely is not trivial. 
+You can generate a 
+package-specific token, 
+then store it as an encrypted secret in GitHub actions, 
+and then unpack it 
+at the right stage, 
+avoid leaking it, 
+and push the package.</p> 
+<p>Sounds like being half a bad line away from leaking the 
+API key. 
+Luckily, 
+there is a way to avoid it. 
+The 
+<a href="https://github.com/pypa/gh-action-pypi-publish">PyPI publish GitHub Action</a> 
+uses 
+OpenID Connect 
+to authenticate the runner 
+against PyPI.</p> 
+<p>You will want to configure GitHub, 
+with the appropriate parameters, 
+as a 
+<a href="https://docs.pypi.org/trusted-publishers/">trusted publisher</a>.</p> 
+</div> 
+<div> 
+<h2>Simple</h2> 
+<p>When do you release? 
+Are you checking releases manually? 
+Why?</p> 
+<p>CI should make sure that, 
+pre-merge, 
+branches pass all automated checks. 
+"Keep the main branch in a releasable state", 
+as the kids used to say.</p> 
+<p>Wait. 
+If main branch is releasable, 
+why not...release it?</p> 
+<pre> 
+<span>on</span><span>:</span><span> 
+  </span><span>push</span><span>:</span><span> 
+    </span><span>branches</span><span>:</span><span> 
+      </span><span>-</span><span> </span><span>trunk</span> 
+</pre> 
+<p>This will configure a GitHub action that releases on every push to trunk. 
+(Trunk is the 
+"main branch" 
+of a tree, 
+though yours might be named differently.)</p> 
+<p>See the entire action in 
+<a href="https://github.com/moshez/autocalver/blob/63d509ecff2173aff07b4e2897e0073cb5a05c0a/.github/workflows/release.yml">autocalver's workflows</a></p> 
+</div> 
+<div> 
+<h2>Summary</h2> 
+<p>Configuring your project to use 
+<tt>autocalver</tt> 
+gives you automatic version numbers. 
+Using PyPI/GitHub trusted publishing model 
+eliminates complicated secret sharing schemes. 
+GitHub upload actions on merge to main branch 
+removes the need to make a decision about 
+when to release.</p> 
+<p>Putting all of them together results in 
+releases taking literally 0 work. 
+More time for fun!</p> 
+</div>]]></description>
+<pubDate>Sun, 07 May 2023 17:09:14 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="http://planetpython.org/">Planet Python</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e7516313c51</guid>
+</item>
+<item>
+<title>Kushal Das: Fixing missing yubikey trouble on fedora 38</title>
+<link>https://kushaldas.in/posts/fixing-missing-yubikey-trouble-on-fedora-38.html</link>
+<description><![CDATA[ 
+<p>From the time I updated to Fedora 38, I am having trouble with my Yubikey. If I 
+remove the key, just plugging it back does not help. <code>gpg</code> can not detect it.</p> 
+<pre><code>$ gpg --card-status  
+gpg: selecting card failed: No such device 
+gpg: OpenPGP card not available: No such device 
+</code></pre> 
+<p>The only way to get it working is restarting the <code>pcscd</code> service, again &amp; again.</p> 
+<p>As <a href="https://fosstodon.org/@hko/110327653808157771">Heiko</a> pointed out, this is 
+the trouble between <code>pcscd</code> and <code>scdaemon</code>, the second one comes via <code>gnupg</code> 
+package in Fedora.</p> 
+<p>To solve the issue, first I tried the following</p> 
+<pre><code>$ echo disable-ccid &gt;&gt; ~/.gnupg/scdaemon.conf 
+$ gpgconf --reload gpg-agent 
+</code></pre> 
+<p>Then I figured that I have <code>opensc</code> package installed, just removing that one 
+and then a reboot solved the trouble for me.</p> 
+<pre><code>$ sudo dnf remove opensc -y 
+</code></pre>]]></description>
+<pubDate>Sun, 07 May 2023 17:09:14 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="http://planetpython.org/">Planet Python</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e7516313c49</guid>
+</item>
+<item>
+<title>AMD promises its new laptop chips will crush the Apple M2 and it’s got receipts</title>
+<link>https://www.techradar.com/news/amd-promises-its-new-laptop-chips-will-crush-the-apple-m2-and-its-got-reciepts</link>
+<description><![CDATA[<p><img src="https://cdn.mos.cms.futurecdn.net/DJubnZ3LdxQuMRZLdRfmaV-1200-80.jpg" alt="DJubnZ3LdxQuMRZLdRfmaV-1200-80.jpg"></p><a href="https://news.ycombinator.com/item?id=35851174">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 17:06:32 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163182ed</guid>
+</item>
+<item>
+<title>CSS Glowing Button Hover Animation</title>
+<link>https://dev.to/jon_snow789/css-glowing-button-hover-animation-2nep</link>
+<description><![CDATA[<p>CSS Glowing Button Hover Animation</p> 
+ 
+ 
+ 
+ 
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--MqWpQz10--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_66%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/91qe086dw7vcwz8jj2v2.gif"><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--MqWpQz10--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_66%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/91qe086dw7vcwz8jj2v2.gif" alt="CSS Glowing Button Hover Animation" width="288" height="186"></a></p> 
+ 
+ 
+ 
+ 
+<h3> 
+   
+   
+  HTML Code 
+</h3> 
+ 
+ 
+ 
+<div> 
+<pre><code><span>&lt;button&gt;</span> Button 
+<span>&lt;/button&gt;</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<h3> 
+   
+   
+  CSS Code 
+</h3> 
+ 
+ 
+ 
+<div> 
+<pre><code><span>button</span> <span>{</span> 
+ <span>--glow-color</span><span>:</span> <span>rgb</span><span>(</span><span>217</span><span>,</span> <span>176</span><span>,</span> <span>255</span><span>);</span> 
+ <span>--glow-spread-color</span><span>:</span> <span>rgba</span><span>(</span><span>191</span><span>,</span> <span>123</span><span>,</span> <span>255</span><span>,</span> <span>0.781</span><span>);</span> 
+ <span>--enhanced-glow-color</span><span>:</span> <span>rgb</span><span>(</span><span>231</span><span>,</span> <span>206</span><span>,</span> <span>255</span><span>);</span> 
+ <span>--btn-color</span><span>:</span> <span>rgb</span><span>(</span><span>100</span><span>,</span> <span>61</span><span>,</span> <span>136</span><span>);</span> 
+ <span>border</span><span>:</span> <span>.25em</span> <span>solid</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+ <span>padding</span><span>:</span> <span>1em</span> <span>3em</span><span>;</span> 
+ <span>color</span><span>:</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+ <span>font-size</span><span>:</span> <span>15px</span><span>;</span> 
+ <span>font-weight</span><span>:</span> <span>bold</span><span>;</span> 
+ <span>background-color</span><span>:</span> <span>var</span><span>(</span><span>--btn-color</span><span>);</span> 
+ <span>border-radius</span><span>:</span> <span>1em</span><span>;</span> 
+ <span>outline</span><span>:</span> <span>none</span><span>;</span> 
+ <span>box-shadow</span><span>:</span> <span>0</span> <span>0</span> <span>1em</span> <span>.25em</span> <span>var</span><span>(</span><span>--glow-color</span><span>),</span> 
+        <span>0</span> <span>0</span> <span>4em</span> <span>1em</span> <span>var</span><span>(</span><span>--glow-spread-color</span><span>),</span> 
+        <span>inset</span> <span>0</span> <span>0</span> <span>.75em</span> <span>.25em</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+ <span>text-shadow</span><span>:</span> <span>0</span> <span>0</span> <span>.5em</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+ <span>position</span><span>:</span> <span>relative</span><span>;</span> 
+ <span>transition</span><span>:</span> <span>all</span> <span>0.3s</span><span>;</span> 
+<span>}</span> 
+ 
+<span>button</span><span>::after</span> <span>{</span> 
+ <span>pointer-events</span><span>:</span> <span>none</span><span>;</span> 
+ <span>content</span><span>:</span> <span>""</span><span>;</span> 
+ <span>position</span><span>:</span> <span>absolute</span><span>;</span> 
+ <span>top</span><span>:</span> <span>120%</span><span>;</span> 
+ <span>left</span><span>:</span> <span>0</span><span>;</span> 
+ <span>height</span><span>:</span> <span>100%</span><span>;</span> 
+ <span>width</span><span>:</span> <span>100%</span><span>;</span> 
+ <span>background-color</span><span>:</span> <span>var</span><span>(</span><span>--glow-spread-color</span><span>);</span> 
+ <span>filter</span><span>:</span> <span>blur</span><span>(</span><span>2em</span><span>);</span> 
+ <span>opacity</span><span>:</span> <span>.7</span><span>;</span> 
+ <span>transform</span><span>:</span> <span>perspective</span><span>(</span><span>1.5em</span><span>)</span> <span>rotateX</span><span>(</span><span>35deg</span><span>)</span> <span>scale</span><span>(</span><span>1</span><span>,</span> <span>.6</span><span>);</span> 
+<span>}</span> 
+ 
+<span>button</span><span>:hover</span> <span>{</span> 
+ <span>color</span><span>:</span> <span>var</span><span>(</span><span>--btn-color</span><span>);</span> 
+ <span>background-color</span><span>:</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+ <span>box-shadow</span><span>:</span> <span>0</span> <span>0</span> <span>1em</span> <span>.25em</span> <span>var</span><span>(</span><span>--glow-color</span><span>),</span> 
+        <span>0</span> <span>0</span> <span>4em</span> <span>2em</span> <span>var</span><span>(</span><span>--glow-spread-color</span><span>),</span> 
+        <span>inset</span> <span>0</span> <span>0</span> <span>.75em</span> <span>.25em</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+<span>}</span> 
+ 
+<span>button</span><span>:active</span> <span>{</span> 
+ <span>box-shadow</span><span>:</span> <span>0</span> <span>0</span> <span>0.6em</span> <span>.25em</span> <span>var</span><span>(</span><span>--glow-color</span><span>),</span> 
+        <span>0</span> <span>0</span> <span>2.5em</span> <span>2em</span> <span>var</span><span>(</span><span>--glow-spread-color</span><span>),</span> 
+        <span>inset</span> <span>0</span> <span>0</span> <span>.5em</span> <span>.25em</span> <span>var</span><span>(</span><span>--glow-color</span><span>);</span> 
+<span>}</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+ 
+ 
+ 
+<p>Thanks for Reading ❤️! Check my website <a href="https://democoding.in/">Demo coding</a> for updates about my latest CSS Animation, CSS Tools, and some cool web dev tips. Let's be friends!</p> 
+ 
+<p>Don't forget to subscribe our channel : <a href="https://www.youtube.com/@democode">Demo code</a></p>]]></description>
+<pubDate>Sun, 07 May 2023 17:02:26 +0000</pubDate>
+<category>Programming</category>
+<dc:creator>Jon Snow</dc:creator>
+<source url="http://dev.to/">The Practical Developer</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e751631dbab</guid>
+</item>
+<item>
+<title>Deploying Your First Microservice to Kubernetes</title>
+<link>https://dev.to/rinkiyakedad/deploying-your-first-microservice-to-kubernetes-ip1</link>
+<description><![CDATA[<p>I have <a href="https://dev.to/rinkiyakedad/series/16643">written</a> extensively about different Kubernetes concepts in my previous blogs, but I haven't covered a proper, step-by-step hands-on guide for getting started with Kubernetes. In this article, my plan is to do exactly that. After all, there's only so much you can learn by reading without trying things out yourself.</p> 
+ 
+<p>We will take a simple microservice-based application, containerize it, and deploy it to a Kubernetes cluster. I will be using <a href="https://cloud.google.com/">Google Cloud</a> for this, but you can use any cloud provider to follow along. Without wasting any more words, let's get started!</p> 
+ 
+<h2> 
+   
+   
+  The Application 
+</h2> 
+ 
+<p>I want to focus on the concepts of containerization and Kubernetes in this article, so to keep things easy to follow, we will work with a very simple Go server. Even if you've never worked with Go, the code should be pretty simple to understand.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>// main.go</span> 
+ 
+<span>package</span> <span>main</span> 
+ 
+<span>import</span> <span>(</span> 
+    <span>"fmt"</span> 
+    <span>"log"</span> 
+    <span>"net/http"</span> 
+<span>)</span> 
+ 
+<span>func</span> <span>main</span><span>()</span> <span>{</span> 
+    <span>http</span><span>.</span><span>HandleFunc</span><span>(</span><span>"/"</span><span>,</span> <span>func</span><span>(</span><span>w</span> <span>http</span><span>.</span><span>ResponseWriter</span><span>,</span> <span>r</span> <span>*</span><span>http</span><span>.</span><span>Request</span><span>)</span> <span>{</span> 
+        <span>fmt</span><span>.</span><span>Fprintf</span><span>(</span><span>w</span><span>,</span> <span>"Hello, World!"</span><span>)</span> 
+    <span>})</span> 
+ 
+    <span>fmt</span><span>.</span><span>Printf</span><span>(</span><span>"Starting server at port 4000</span><span>\n</span><span>"</span><span>)</span> 
+    <span>if</span> <span>err</span> <span>:=</span> <span>http</span><span>.</span><span>ListenAndServe</span><span>(</span><span>":4000"</span><span>,</span> <span>nil</span><span>);</span> <span>err</span> <span>!=</span> <span>nil</span> <span>{</span> 
+        <span>log</span><span>.</span><span>Fatal</span><span>(</span><span>err</span><span>)</span> 
+    <span>}</span> 
+<span>}</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>If you want to run this application locally, you first have to build the binary and then run it.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>$ </span>go build 
+<span>$ </span>./simple-go-server 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>Then, when you visit <a href="http://localhost:4000">localhost:4000</a>, you should see the text "Hello, World!" Pretty simple, right?</p> 
+ 
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--aGj68yOr--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4v8nc6rc43wkoagh1mb9.png"><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--aGj68yOr--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4v8nc6rc43wkoagh1mb9.png" alt="hello world from localhost" width="532" height="234"></a></p> 
+ 
+<p>Now let's work on containerizing this Go service.</p> 
+ 
+<h2> 
+   
+   
+  Containerizing Our Application 
+</h2> 
+ 
+<p>Kubernetes does not run applications directly. You cannot simply instruct it to build the binary and start serving the application. Instead, it is a tool for running and managing containers (in fact, it doesn't run containers directly, but more on that later). Therefore, we need to containerize our application before we can proceed to running it on a Kubernetes cluster.</p> 
+ 
+<blockquote> 
+<p>If you are not familiar with containers and Dockerfiles, I recommend checking out my <a href="https://dev.to/rinkiyakedad/series/10009">article series</a> on Docker before proceeding.</p> 
+</blockquote> 
+ 
+<p>Let's write a Dockerfile for our application. At the root folder of the application, create the following file:<br> 
+</p> 
+ 
+<div> 
+<pre><code><span># Dockerfile</span> 
+ 
+<span>FROM</span><span> golang:buster</span> 
+ 
+<span>WORKDIR</span><span> /app</span> 
+<span>ADD</span><span> . .</span> 
+<span>RUN </span>go build <span>-o</span> /usr/local/bin/simple-go-server 
+ 
+<span>EXPOSE</span><span> 4000</span> 
+<span>CMD</span><span> ["/usr/local/bin/simple-go-server"]</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>Assuming you have some familiarity with <a href="https://dev.to/rinkiyakedad/learning-to-use-docker-298b#dockerfile">Dockerfiles</a>, this one should be fairly easy to understand. We use a <code>golang</code> base image to ensure that Go and all required dependencies are present in our container from the start.</p> 
+ 
+<p>After setting the working directory, we move our application's code (the <code>main.go</code> file in this case) to this location. We then execute the <code>go build</code> command to build the binary from our code and output it at <code>/usr/local/bin/simple-go-server</code>. Finally, we specify that the container should listen for requests on <code>port 4000</code>, which is the port our API service runs on.</p> 
+ 
+<p>As the last step, we simply run the binary we had previously created.</p> 
+ 
+<p>To verify that everything is working as expected, build a container image from this Dockerfile and run it.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>$ </span>docker build <span>-t</span> &lt;your-dockerhub-username&gt;/simple-go-server <span>.</span> 
+<span>$ </span>docker run <span>--rm</span> <span>--name</span> simple-go-server <span>-p</span> 4000:4000 &lt;your-dockerhub-username&gt;/simple-go-server 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>In the <code>docker run</code> command, we map the container's port <code>4000</code> to the port <code>4000</code> of our local machine. After running this command, if you visit <a href="http://localhost:4000">localhost:4000</a>, you should see the text as we did when we ran the application after building the binary locally.</p> 
+ 
+<p>Now that we have containerized our Go service, let's see how we can run it on an actual Kubernetes cluster!</p> 
+ 
+<h2> 
+   
+   
+  Running Our Microservice on Kubernetes 
+</h2> 
+ 
+<p>To avoid writing an excessively long article, I will not cover the steps for creating a Kubernetes cluster in a cloud provider and obtaining your kubectl credentials. However, if you are using GCP like I am, you can find those steps <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl">here</a>. A similar guide should be easy to find for any other cloud provider you might be using.</p> 
+ 
+<p>Assuming you have kubectl configured to work with your cluster, the first step is to write some manifests. Kubernetes works on a declarative model. You specify what "objects" you need, and then Kubernetes works to make the current state of the system match the desired state. We will specify what we need by writing two YAML manifests.</p> 
+ 
+<blockquote> 
+<p>If you are not familiar with Kubernetes, I recommend checking out <a href="https://dev.to/okteto/fundamental-kubernetes-concepts-everyone-needs-to-know-mm7">this article</a> before proceeding.</p> 
+</blockquote> 
+ 
+<p>The first manifest we will create is:<br> 
+</p> 
+ 
+<div> 
+<pre><code><span># k8s/deployment.yaml</span> 
+ 
+<span>apiVersion</span><span>:</span> <span>apps/v1</span> 
+<span>kind</span><span>:</span> <span>Deployment</span> 
+<span>metadata</span><span>:</span> 
+  <span>name</span><span>:</span> <span>simple-go-server</span> 
+<span>spec</span><span>:</span> 
+  <span>replicas</span><span>:</span> <span>1</span> 
+  <span>selector</span><span>:</span> 
+    <span>matchLabels</span><span>:</span> 
+      <span>app</span><span>:</span> <span>simple-go-server</span> 
+  <span>template</span><span>:</span> 
+    <span>metadata</span><span>:</span> 
+      <span>labels</span><span>:</span> 
+        <span>app</span><span>:</span> <span>simple-go-server</span> 
+    <span>spec</span><span>:</span> 
+      <span>containers</span><span>:</span> 
+        <span>-</span> <span>name</span><span>:</span> <span>simple-go-server</span> 
+          <span>image</span><span>:</span> <span>&lt;your-dockerhub-username&gt;/simple-go-server</span> 
+          <span>ports</span><span>:</span> 
+            <span>-</span> <span>containerPort</span><span>:</span> <span>4000</span> 
+          <span>imagePullPolicy</span><span>:</span> <span>Always</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>As mentioned earlier, Kubernetes does not directly run containers. Instead, it runs something called Pods. Pods encapsulate containers, meaning that a Pod can contain one or more containers, and each container in a Pod runs in its own isolated process namespace within the Pod.</p> 
+ 
+<p>However, if you look at the <code>kind</code> field in our manifest, you'll notice that we're not telling Kubernetes to create Pods for us. This is because Pods alone won't provide us with much value.</p> 
+ 
+<p>A pod can go down due to any number of reasons, which would make our application inaccessible to users. Similarly, we might need more or fewer pods in the future depending on the load on our application. If we simply tell Kubernetes to create a fixed number of pods, scaling won't be easy. Nor will updating the application when we release a newer version of our Hello World API. This is why we create an object called Deployment instead of Pods.</p> 
+ 
+<p>A Deployment is a higher-level object than Pods and is used to manage a set of identical pods. We tell Kubernetes the number of Pods we want it to always have up and running for our application under the <code>replicas</code> field. If any number of these Pods goes down for any reason, Kubernetes will automatically try to bring up another Pod until the number matches what we had requested. We won't go into the details here, but Deployments also have other benefits, like allowing you to perform rolling updates to your application and change the number of Pods based on the traffic your application receives. This is why we always prefer Deployments over Pods. Under <code>spec.template.spec.containers</code>, we provide information about what containers should be running inside the Pods the Deployment creates for us. With this, Kubernetes has everything it needs to run our application. But the story doesn't end here.</p> 
+ 
+<p>Creating the above Deployment in Kubernetes will run your application in the cluster. However, a problem that remains unsolved is how your users can access it. We need Kubernetes to provide us an endpoint where users can access this application. To achieve this, we need to leverage another Kubernetes object called Service. You can read more about Services in detail <a href="https://dev.to/rinkiyakedad/networking-in-kubernetes-1eci">here</a>.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span># k8s/service.yaml</span> 
+ 
+<span>apiVersion</span><span>:</span> <span>v1</span> 
+<span>kind</span><span>:</span> <span>Service</span> 
+<span>metadata</span><span>:</span> 
+  <span>name</span><span>:</span> <span>simple-go-server</span> 
+<span>spec</span><span>:</span> 
+  <span>selector</span><span>:</span> 
+    <span>app</span><span>:</span> <span>simple-go-server</span> 
+  <span>ports</span><span>:</span> 
+    <span>-</span> <span>name</span><span>:</span> <span>http</span> 
+      <span>port</span><span>:</span> <span>80</span> 
+      <span>targetPort</span><span>:</span> <span>4000</span> 
+  <span>type</span><span>:</span> <span>LoadBalancer</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>As discussed earlier, Pods are ephemeral, which means that we cannot rely on their IP addresses to expose the application since they can stop existing at any point. The Service object helps solve this problem by providing a stable IP address for the Pods part of our deployment (which we specify under the <code>selector</code> field). This way, users can discover them without having to know the exact IP addresses of individual Pods.</p> 
+ 
+<p>It is important to choose the correct <code>type</code> of service since Kubernetes has different types of services, each with its own goals. The <code>LoadBalancer</code> service type is used when we want to provide external access to our application. When we create this Service object, Kubernetes asks our cloud provider (in this case, GCP) to create a load balancer for us. This load balancer has a fixed IP address that can be used to access the application.</p> 
+ 
+<p>Enough with the explanation, let's see things in action!</p> 
+ 
+<h2> 
+   
+   
+  Trying Out Our Application. 
+</h2> 
+ 
+<p>Assuming you have placed both manifests we wrote in a folder called <code>k8s</code>, you can create the objects by running the following command:<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>$ </span>kubectl apply <span>-f</span> k8s 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>To confirm that all objects have been created, run:<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>$ </span>kubectl get all 
+ 
+NAME                                    READY   STATUS    RESTARTS   AGE 
+pod/simple-go-server-6dbd986f57-wdq28   1/1     Running   0          4m49s 
+ 
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP     PORT<span>(</span>S<span>)</span>        AGE 
+service/kubernetes         ClusterIP      10.120.32.1     &lt;none&gt;          443/TCP        157d 
+service/simple-go-server   LoadBalancer   10.120.46.108   35.246.20.168   80:31225/TCP   4m51s 
+ 
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE 
+deployment.apps/simple-go-server   1/1     1            1           4m52s 
+ 
+NAME                                          DESIRED   CURRENT   READY   AGE 
+replicaset.apps/simple-go-server-6dbd986f57   1         1         1       4m53s 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>As you can see, our Deployment object has created a Pod for us. The ReplicaSet object you see is also created by the Deployment, but only to manage the Pods it creates. Additionally, the <code>simple-go-server</code> service is running. Copy the <code>EXTERNAL-IP</code> you see for this service and visit that address in your browser.</p> 
+ 
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--5_DwwD_6--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/hp5f3gi0o0g3qkbggnqv.png"><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--5_DwwD_6--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/hp5f3gi0o0g3qkbggnqv.png" alt="hello world from load balancer" width="372" height="134"></a></p> 
+ 
+<p>And voila! Our application is now up and running and accessible. You can share this IP address with anyone, or even map it to a domain name to make your microservice easily accessible for users.</p> 
+ 
+<h2> 
+   
+   
+  Conclusion 
+</h2> 
+ 
+<p>In this article, we deployed a simple microservice to a Kubernetes cluster from scratch. I hope you found this article useful and that it helped you see some of the Kubernetes concepts we have discussed theoretically in action. If you liked this, please feel free to share it on your social media with your friends :) As always, if you have any questions or suggestions, don't hesitate to reach out to me on <a href="https://twitter.com/RinkiyaKeDad">Twitter</a> or <a href="https://www.linkedin.com/in/arsh4/">LinkedIn</a>!</p>]]></description>
+<pubDate>Sun, 07 May 2023 16:41:01 +0000</pubDate>
+<category>Programming</category>
+<dc:creator>Arsh Sharma</dc:creator>
+<source url="http://dev.to/">The Practical Developer</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e751633d515</guid>
+</item>
+<item>
+<title>Why the Ferrari F355 Sounds So Good</title>
+<link>https://www.roadandtrack.com/news/a43805754/ferrari-f355-exhaust-sound/</link>
+<description><![CDATA[<p><img src="https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/cp-enginnering-column-ferrari-f355-berlinetta-lead-645534e8099b3.jpg?crop=1xw:1xh;center,top&amp;resize=1200:*" alt="cp-enginnering-column-ferrari-f355-berli"></p><a href="https://news.ycombinator.com/item?id=35852783">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 16:37:19 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163c3b62</guid>
+</item>
+<item>
+<title>Cory Doctorow Explains Why Big Tech Is Making the Internet Terrible</title>
+<link>https://jacobin.com/2023/05/cory-doctorow-big-tech-internet-monopoly-capitalism-artificial-intelligence-crypto/</link>
+<description><![CDATA[<p><img src="https://images.jacobinmag.com/wp-content/uploads/2023/05/05175113/GettyImages-1241391239.jpg" alt="GettyImages-1241391239.jpg"></p><a href="https://news.ycombinator.com/item?id=35852482">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 16:37:19 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163c3b53</guid>
+</item>
+<item>
+<title>Pixel phones are sold with bootloader unlocking disabled</title>
+<link>https://www.fitzsim.org/blog/?p=545</link>
+<description><![CDATA[<p><img src="https://www.fitzsim.org/screenshots/google-pixel-7-pro-sold-oem-locked.png" alt="google-pixel-7-pro-sold-oem-locked.png"></p><a href="https://news.ycombinator.com/item?id=35852192">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 16:37:19 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163c3b4e</guid>
+</item>
+<item>
+<title>Allowing only numeric input in a TextBox</title>
+<link>https://www.codeproject.com/Articles/5360384/Allowing-only-numeric-input-in-a-TextBox</link>
+<description><![CDATA[<p><img src="https://www.codeproject.com/KB/Blogs/5360384/7c4c68ae-fd04-4c6b-a444-5f114e2c556b.Png" alt="7c4c68ae-fd04-4c6b-a444-5f114e2c556b.Png"></p>You may have seen a Windows textbox that would disallow non-numeric input, showing an error message like in the following]]></description>
+<pubDate>Sun, 07 May 2023 16:24:24 +0000</pubDate>
+<category>Programming</category>
+<dc:creator>ToughDev</dc:creator>
+<source url="http://www.codeproject.com/">CodeProject Latest Articles</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163d7583</guid>
+</item>
+<item>
+<title>In-Game Wiki in Unity in 15 min</title>
+<link>https://dev.to/snowman647/in-game-wiki-in-unity-in-15-min-o07</link>
+<description><![CDATA[<p><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--sW8tiLa_--/c_imagga_scale,f_auto,fl_progressive,h_500,q_auto,w_1000/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/kttfmegu20puhgz6c2jc.png" alt="kttfmegu20puhgz6c2jc.png"></p><p>This solution is ideal if you need a simple way to create a wiki in your game.</p>  
+  
+<p>Solution is based on TextMesh Pro component.</p>  
+  
+<p>The game itself is in active development, you can subscribe for updates about <a href="https://devmanager.carrd.co">what does it mean to be manager</a><br>  
+</p>  
+  
+<div>  
+<pre><code>public class WikiUI : MonoBehaviour, IPointerClickHandler  
+{  
+    public TextMeshProUGUI text;  
+  
+    public void OnenWikiAbout(string page)  
+    {  
+        text.text = "&lt;line-height=125%&gt;";  
+  
+        if (page == "negotiations")  
+        {  
+            text.text += "Negotiations&lt;br&gt;Negotiations start when there are several opinions on the next steps. During negotiations, you and your colleagues communicate about which course to take.";  
+        }  
+        else if (page == "homepage")  
+        {  
+            text.text += "Wiki Index:&lt;br&gt;&lt;link=negotiations&gt;&lt;u&gt;Read about negotiations&lt;/u&gt;&lt;/link&gt;";  
+        }  
+        else  
+        {  
+            text.text = "404&lt;br&gt;";  
+        }  
+  
+        text.text += "&lt;br&gt;&lt;link=homepage&gt;&lt;u&gt;Go Home&lt;/u&gt;&lt;/link&gt;";  
+    }  
+  
+    public void OnPointerClick(PointerEventData eventData)  
+    {  
+        // camera is null only if you use Screen Space Overlay, otherwise add camera reference  
+        int linkIndex = TMP_TextUtilities.FindIntersectingLink(text, eventData.position, null);  
+  
+        if (linkIndex != -1)  
+        {  
+            TMP_LinkInfo linkInfo = text.textInfo.linkInfo[linkIndex];  
+            OnenWikiAbout(linkInfo.GetLinkID());  
+        }  
+    }  
+}  
+</code></pre>  
+  
+</div>]]></description>
+<pubDate>Sun, 07 May 2023 16:22:03 +0000</pubDate>
+<category>Programming</category>
+<dc:creator>Mike Krop</dc:creator>
+<source url="http://dev.to/">The Practical Developer</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163da3fb</guid>
+</item>
+<item>
+<title>When Connie Converse, the ‘female Bob Dylan,’ lived in NYC</title>
+<link>https://www.nytimes.com/2023/05/06/nyregion/connie-converse-nyc.html</link>
+<description><![CDATA[<p><img src="https://static01.nyt.com/images/2023/05/02/multimedia/00converse-02-qtwl/00converse-02-qtwl-facebookJumbo.jpg" alt="00converse-02-qtwl-facebookJumbo.jpg"></p><a href="https://news.ycombinator.com/item?id=35851156">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 16:16:31 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163e36d9</guid>
+</item>
+<item>
+<title>Secd: A silly implementation of the SECD machine</title>
+<link>https://github.com/zachallaun/secd</link>
+<description><![CDATA[<p><img src="https://opengraph.githubassets.com/6e949eec2bd57435d1b3e9a834bcf3a9b295fc706be002eb336352a4b2694260/zachallaun/secd" alt="secd"></p><a href="https://news.ycombinator.com/item?id=35837747">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 16:16:31 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163e36cf</guid>
+</item>
+<item>
+<title>OpenAI Sued for Fraud Allegations</title>
+<link>https://webapps.sftc.org/captcha/captcha.dll?referrer=https://webapps.sftc.org/ci/CaseInfo.dll?CaseNum=CGC23606176</link>
+<description><![CDATA[<a href="https://news.ycombinator.com/item?id=35852364">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 15:34:45 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163a4764</guid>
+</item>
+<item>
+<title>AI voice scams: 77% of victims lose money</title>
+<link>https://9to5mac.com/2023/05/05/ai-voice-scams-how-to-prevent/</link>
+<description><![CDATA[<p><img src="https://i0.wp.com/9to5mac.com/wp-content/uploads/sites/6/2023/05/ai-voice-scams-how-to-protect.jpeg?resize=1200%2C628&amp;quality=82&amp;strip=all&amp;ssl=1" alt="ai-voice-scams-how-to-protect.jpeg?resiz"></p><a href="https://news.ycombinator.com/item?id=35852360">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 15:34:45 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163a46a3</guid>
+</item>
+<item>
+<title>Why Lisp?</title>
+<link>https://nyxt.atlas.engineer/article/why-lisp.org</link>
+<description><![CDATA[<a href="https://news.ycombinator.com/item?id=35852321">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 15:34:45 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163a4692</guid>
+</item>
+<item>
+<title>Russians Seem Interested in My Book About How Dictatorships End</title>
+<link>https://www.almendron.com/tribuna/russians-seem-very-interested-in-my-book-about-how-dictatorships-end/</link>
+<description><![CDATA[<p><img src="https://www.almendron.com/tribuna/wp-content/uploads/2023/04/russians-seem-very-interested-in-my-book-about-how-dictatorships-end.jpg" alt="russians-seem-very-interested-in-my-book"></p><a href="https://news.ycombinator.com/item?id=35852242">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 15:34:45 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163a45db</guid>
+</item>
+<item>
+<title>Is the multiverse of WordPress in danger?</title>
+<link>https://dev.to/jmau111/is-the-multiverse-of-wordpress-in-danger-4of9</link>
+<description><![CDATA[<p><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--chmX6QyY--/c_imagga_scale,f_auto,fl_progressive,h_500,q_auto,w_1000/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/myllicptl53gxdqn12ni.png" alt="myllicptl53gxdqn12ni.png"></p><p>I've been maintaining a small plugin for WordPress users over the past years.</p>  
+  
+<p>I've also used WordPress for various projects, from small websites to big factories (e.g., multisite, multi-networks).</p>  
+  
+<p>WordPress might do a lot for the popularity of PHP, depsite all the [legitimate] critics you might have against the code.</p>  
+  
+<h2>  
+    
+    
+  Gutenberg or not?  
+</h2>  
+  
+<p>The core team has introduced Gutenberg, a brand new javascript/react-based editor in 2018.</p>  
+  
+<p>The big change did not come without issues, and a significant part of the WordPress galaxy remains skeptical.</p>  
+  
+<p>Critics like to highlight popular plugins like "Classic Editor" or "Disable Gutenberg" and their millions of active installs.</p>  
+  
+<p>While you cannot ignore such statistics, pretty much every time a new feature appears in the core, a new plugin is released to disable it.</p>  
+  
+<p>With WordPress, it's not a surprise, it's a tradition.</p>  
+  
+<p>Although, not all plugins reach <strong>millions</strong> of active installations.</p>  
+  
+<h2>  
+    
+    
+  The multiverse of WordPress  
+</h2>  
+  
+<p>WordPress has so many applications and usages, from the free platform for blogs (wordpress.org) to the self-hosting solution for individuals and corporate environments, not to mention all derivated products and projects.</p>  
+  
+<p>The featured image of this post is a screenshot from the very end of the movie "Doctor Strange in the Multiverse of Madness," where a mysterious woman appears from nowhere to tell Strange he created an "incursion."</p>  
+  
+<p>That's a very geeky way to illustrate the problem here, but, in the movie, an incursion happens when two universes collide, which usually leads to the destruction of both.</p>  
+  
+<p>I sincerely hope WordPress won't end like that, but a significant part of users seem to prefer premium page builders and other third-party solutions to Gutenberg, and this huge ecosystem gets more and more fragmented.</p>  
+  
+<h2>  
+    
+    
+  I keep maintaining both editors  
+</h2>  
+  
+<p>As a plugin maintainer, I like to provide both options, which means my Gutenberg users get a custom integration using React and the Gutenberg API, but others can still use the plugin with a simple metabox.</p>  
+  
+<h2>  
+    
+    
+  The battle for E-commerce seems tough  
+</h2>  
+  
+<p>While the ecosystem has various solutions for E-commerce, for example, the very popular Woocommerce, some companies may be reluctant to use WordPress for various reasons, including the following:</p>  
+  
+<ul>  
+<li>self-hosted e-commerce is difficult to secure and maintain (not specific to WordPress)</li>  
+<li>competitors are impressive: Square, Shopify</li>  
+<li>Gutenberg was not meant to boost such usages, and there's not so many blocks available for E-commerce</li>  
+<li>big payment plaftorms like Stripe tend to provide their own integration for static websites which removes the hassle of databases and other dynamic frameworks</li>  
+</ul>  
+  
+<p>WordPress may no longer attract all young businesses that need to go online quickly with minimum efforts and budget.</p>  
+  
+<h2>  
+    
+    
+  Wrap up  
+</h2>  
+  
+<p>I know there are lots of posts that speculate on the potential death of frameworks or even programming languages.</p>  
+  
+<p>We know for sure that the main goal of Gutenberg was full site editing (FSE), and users can already enjoy the first versions of this global WYSIWYG editor (not just for posts), but I genuinely wonder what the future holds for this CMS.</p>  
+  
+<p>Competition is great, and I don't think WordPress <em>itself</em> aims to keep this kind of monopolistic position for eternity.</p>]]></description>
+<pubDate>Sun, 07 May 2023 15:30:24 +0000</pubDate>
+<category>Programming</category>
+<dc:creator>jmau111⭐⭐⭐</dc:creator>
+<source url="http://dev.to/">The Practical Developer</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163aaa01</guid>
+</item>
+<item>
+<title>Push 3.0 Programming Language Description (2004)</title>
+<link>http://faculty.hampshire.edu/lspector/push3-description.html</link>
+<description><![CDATA[<a href="https://news.ycombinator.com/item?id=35849241">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 15:24:28 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e75163b47d1</guid>
+</item>
+<item>
+<title>Before Dylan, There Was Connie Converse. Then She Vanished</title>
+<link>https://www.nytimes.com/2023/05/06/nyregion/connie-converse-nyc.html</link>
+<description><![CDATA[<p><img src="https://static01.nyt.com/images/2023/05/02/multimedia/00converse-02-qtwl/00converse-02-qtwl-facebookJumbo.jpg" alt="00converse-02-qtwl-facebookJumbo.jpg"></p><a href="https://news.ycombinator.com/item?id=35851156">Comments</a>]]></description>
+<pubDate>Sun, 07 May 2023 15:04:23 +0000</pubDate>
+<category>Programming</category>
+<dc:creator></dc:creator>
+<source url="https://news.ycombinator.com/">Hacker News</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e7516253c60</guid>
+</item>
+<item>
+<title>Multi-Stream Joins With SQL</title>
+<link>https://dev.to/bobur/multi-stream-joins-with-sql-1n6a</link>
+<description><![CDATA[<p>Real-time data is becoming increasingly important in today's fast-paced business world, as companies seek to gain valuable insights and make informed decisions based on the most up-to-date information available. However, processing and analyzing real-time data can be a challenge, particularly when it comes to joining multiple streams of data together in real-time. In this article, we'll explore <strong>the concept of multi-stream joins in SQL</strong>, and discuss some tips and techniques for <strong>performing these joins effectively</strong> using a <a href="https://www.risingwave.dev/docs/current/key-concepts/#streaming-database">streaming database</a>.</p> 
+ 
+<h2> 
+   
+   
+  Multi-stream Joins: What Are They? 
+</h2> 
+ 
+<p>A multi-stream join involves combining two or more streams of data together in real-time to create a single output stream that reflects the current state of the data. This can be a powerful technique for analyzing real-time data from multiple sources, such as IoT devices, social media feeds, e-commerce apps, or financial markets.</p> 
+ 
+<p>In SQL, joins are typically performed using a query that specifies the <a href="https://www.risingwave.dev/docs/current/sql-create-source/">input streams</a>, the join conditions, and any additional <a href="https://www.risingwave.dev/docs/current/sql-pattern-dynamic-filters/">filtering</a> or <a href="https://www.risingwave.dev/docs/current/sql-function-aggregate/">aggregation</a> functions that are required. The exact syntax for these queries can vary depending on the database system being used, but the basic principles are the same. </p> 
+ 
+<p>Imagine you work for <strong>a ride-sharing company</strong> like <a href="https://www.uber.com/ee/en/">Uber</a> that operates in multiple cities. You have a stream of data from your drivers' GPS devices that includes their location, speed, and other relevant information. You also have a stream of data from your customers' mobile apps that includes their location, destination, and other relevant details.</p> 
+ 
+<p>To improve the overall customer experience and optimize driver efficiency, you want to join these two data streams together in real-time to gain a better understanding of where your drivers are located, which customers are waiting for rides, and which routes are most efficient. See below a couple of scenarios.</p> 
+ 
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--oaCktZfV--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/aj2g78nx2vr4u68fjopz.png"><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--oaCktZfV--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/aj2g78nx2vr4u68fjopz.png" alt="Streaming database for multi-stream joins" width="800" height="315"></a></p> 
+ 
+<h2> 
+   
+   
+  Streaming database for multi-stream joins 
+</h2> 
+ 
+<p>If you're looking to perform stream-to-stream joins in SQL, a streaming database helps you get the most out of your data. By using the streaming database, you can <strong>run SQL queries continuously on single streams</strong>, and <strong>join two or more streams</strong>. Much like other popular <a href="https://en.wikipedia.org/wiki/Relational_database">RDBMS</a> (relational database management system), a streaming database can join together any two datasets/tables expressions using various <a href="https://www.risingwave.dev/docs/current/data-ingestion/">sources</a> or <a href="https://www.risingwave.dev/docs/current/sql-create-mv/">materialized views</a>) into a single table expression. The main difference between joins with streaming databases and traditional databases is the nature of the data being processed. In a traditional database, data is typically stored in tables, and queries are run on this stored data at a point in time. On the other hand, in a streaming database, <strong>data is processed in real-time</strong> as it is being generated, and queries are run on this real-time data stream as data arrives in the form of topics from different <a href="https://www.ibm.com/topics/message-brokers">message brokers</a> like <a href="https://kafka.apache.org/">Kafka</a>. You can read more about <a href="https://medium.com/@bumurzaqov2/streaming-database-vs-traditional-database-ff92ae6d1c5e">how a streaming database differs from a traditional database?</a>.</p> 
+ 
+<p>In the next section, I used <a href="https://www.risingwave.com/">RisingWave</a> as a streaming database and provided some examples of how you could use SQL to perform a multi-stream join. You can find out more about how to choose the <a href="https://medium.com/@bumurzaqov2/how-to-choose-the-right-streaming-database-48d646742e93">right streaming database</a>.</p> 
+ 
+<blockquote> 
+<p><strong>RisingWave</strong> uses Postgres-compatible SQL as the interface to manage and query data. <a href="https://www.risingwave.dev/docs/current/risingwave-sql-101/">This guide</a> will walk you through some of the most used SQL commands in RisingWave.</p> 
+</blockquote> 
+ 
+<h2> 
+   
+   
+  Join streams with RisingWave 
+</h2> 
+ 
+<p>Imagine you want to analyze your ride-sharing data and you might choose to join the driver data stream and the customer data stream based on the location field, as this would allow you to track which drivers are closest to which customers and ensure that you're dispatching drivers efficiently.  </p> 
+ 
+<p><a href="https://res.cloudinary.com/practicaldev/image/fetch/s--wEPiIJOq--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/0m7yy2y7a27cd2vp9b2a.png"><img src="https://res.cloudinary.com/practicaldev/image/fetch/s--wEPiIJOq--/c_limit%2Cf_auto%2Cfl_progressive%2Cq_auto%2Cw_800/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/0m7yy2y7a27cd2vp9b2a.png" alt="Multi-stream join example" width="800" height="450"></a></p> 
+ 
+<p>The sample data below demonstrate the typical data stream generated by the ride-sharing app:</p> 
+ 
+<p><strong>Driver Data Stream</strong></p> 
+ 
+<div><table> 
+<thead> 
+<tr> 
+<th>driver_id</th> 
+<th>location</th> 
+<th>speed</th> 
+<th>rating</th> 
+<th>event_timestamp</th> 
+</tr> 
+</thead> 
+<tbody> 
+<tr> 
+<td>101</td> 
+<td>San Francisco</td> 
+<td>60</td> 
+<td>4</td> 
+<td>2023-04-01 10:30:00</td> 
+</tr> 
+<tr> 
+<td>102</td> 
+<td>New York</td> 
+<td>50</td> 
+<td>5</td> 
+<td>2023-04-01 10:33:00</td> 
+</tr> 
+<tr> 
+<td>103</td> 
+<td>Los Angeles</td> 
+<td>45</td> 
+<td>1</td> 
+<td>2023-04-01 10:31:00</td> 
+</tr> 
+<tr> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+</tr> 
+</tbody> 
+</table></div> 
+ 
+<p><strong>Customer Data Stream</strong></p> 
+ 
+<div><table> 
+<thead> 
+<tr> 
+<th>customer_id</th> 
+<th>pickup_location</th> 
+<th>destination</th> 
+<th>event_timestamp</th> 
+</tr> 
+</thead> 
+<tbody> 
+<tr> 
+<td>201</td> 
+<td>San Francisco</td> 
+<td>Palo Alto</td> 
+<td>2023-04-01 10:30:00</td> 
+</tr> 
+<tr> 
+<td>202</td> 
+<td>New York</td> 
+<td>Brooklyn</td> 
+<td>2023-04-01 10:33:00</td> 
+</tr> 
+<tr> 
+<td>203</td> 
+<td>Los Angeles</td> 
+<td>Santa Monica</td> 
+<td>2023-04-01 10:31:00</td> 
+</tr> 
+<tr> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+</tr> 
+</tbody> 
+</table></div> 
+ 
+<h3> 
+   
+   
+  <strong>Creating a source for a streaming source</strong> 
+</h3> 
+ 
+<p>The first thing you do is to connect the streaming database to a streaming source. A source is a resource that RisingWave can read data from. The streaming source can be two tables in your relational database (MySQL, PostgreSQL, or another) and you can <a href="https://medium.com/@bumurzaqov2/how-change-data-capture-cdc-works-with-streaming-database-dc5fd21ae5d6">ingest data using Change Data Capture</a> (CDC) and RisingWave <a href="https://www.risingwave.dev/docs/current/ingest-from-mysql-cdc/">built-in connector</a>. Or the source can be a <a href="https://www.risingwave.dev/docs/current/create-source-kafka/">Kafka broker</a>. You can create a source in RisingWave using the <code>CREATE SOURCE</code> command. For example, the mapping for the <code>drivers</code> Kafka topic to RisingWave source might look like this:<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>CREATE</span> <span>SOURCE</span> <span>driver_data</span> <span>(</span> 
+    <span>driver_id</span> <span>BIGINT</span><span>,</span> 
+    <span>location</span> <span>VARCHAR</span><span>,</span> 
+    <span>speed</span> <span>BIGINT</span><span>,</span> 
+<span>)</span> <span>WITH</span> <span>(</span> 
+    <span>connector</span> <span>=</span> <span>'kafka'</span><span>,</span> 
+    <span>topic</span> <span>=</span> <span>'driver_topic'</span><span>,</span> 
+    <span>properties</span><span>.</span><span>bootstrap</span><span>.</span><span>server</span> <span>=</span> <span>'message_queue:29092'</span><span>,</span> 
+    <span>scan</span><span>.</span><span>startup</span><span>.</span><span>mode</span> <span>=</span> <span>'earliest'</span> 
+<span>)</span> <span>ROW</span> <span>FORMAT</span> <span>JSON</span><span>;</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>And you will have a second source for <code>customer_topic</code> too.</p> 
+ 
+<h3> 
+   
+   
+  <strong>Continuous queries on a stream</strong> 
+</h3> 
+ 
+<p>Afterward, you can query streams with SQL like you would query them in the ordinary relational database but in the streaming database, the data is <strong>shown in real time as new data is added to the source</strong>. This simple <em>equijoin</em> query would select all fields from both data streams and join them based on the location field.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>SELECT</span> <span>driver_data</span><span>.</span><span>*</span><span>,</span> <span>customer_data</span><span>.</span><span>*</span> 
+<span>FROM</span> <span>driver_data</span> 
+<span>JOIN</span> <span>customer_data</span> 
+<span>ON</span> <span>driver_data</span><span>.</span><span>location</span> <span>=</span> <span>customer_data</span><span>.</span><span>pickup_location</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>You might want to persist all rides-related data in the streaming database. You can create a new table <strong><code>rides</code></strong> in the database that contains information about each ride, including the driver ID, the customer ID, the pickup location, the drop-off location, and the fare amount. In this case, you want to join the incoming continuous <strong><code>drivers</code></strong> data streams with the <strong><code>rides</code></strong> table based on the driver ID. The below join query will allow you to combine information about each driver's location and rating with information about the rides they have completed to identify the most active drivers in certain geographic areas.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>SELECT</span> <span>driver_data</span><span>.</span><span>driver_id</span><span>,</span> <span>driver_data</span><span>.</span><span>location</span><span>,</span> <span>driver_data</span><span>.</span><span>rating</span><span>,</span> <span>COUNT</span><span>(</span><span>ride_data</span><span>.</span><span>ride_id</span><span>)</span> <span>as</span> <span>total_rides</span> 
+<span>FROM</span> <span>driver_data</span> 
+<span>JOIN</span> <span>ride_data</span> 
+<span>ON</span> <span>driver_data</span><span>.</span><span>driver_id</span> <span>=</span> <span>ride_data</span><span>.</span><span>driver_id</span> 
+<span>WHERE</span> <span>driver_data</span><span>.</span><span>location</span> <span>=</span> <span>'San Francisco'</span> 
+<span>GROUP</span> <span>BY</span> <span>driver_data</span><span>.</span><span>driver_id</span><span>,</span> <span>driver_data</span><span>.</span><span>location</span><span>,</span> <span>driver_data</span><span>.</span><span>rating</span> 
+<span>ORDER</span> <span>BY</span> <span>total_rides</span> <span>DESC</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p><strong>Result:</strong></p> 
+ 
+<div><table> 
+<thead> 
+<tr> 
+<th>driver_id</th> 
+<th>location</th> 
+<th>rating</th> 
+<th>total_rides</th> 
+</tr> 
+</thead> 
+<tbody> 
+<tr> 
+<td>101</td> 
+<td>San Francisco</td> 
+<td>4</td> 
+<td>2</td> 
+</tr> 
+<tr> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+<td>...</td> 
+</tr> 
+</tbody> 
+</table></div> 
+ 
+<h3> 
+   
+   
+  Window joins in RisingWave 
+</h3> 
+ 
+<p>Sometimes you are interested in the events during any time intervals. A <a href="https://www.risingwave.dev/docs/current/sql-function-time-window/#window-joins">window join</a> is a type of join operation that is commonly used in streaming databases that allows you to join two streams of data based on a time window. RisingWave offers two types of windows:</p> 
+ 
+<ul> 
+<li><a href="https://www.risingwave.dev/docs/current/sql-function-time-window/#tumble-time-window-function">Tumbling windows</a></li> 
+<li><a href="https://www.risingwave.dev/docs/current/sql-function-time-window/#hop-time-window-function">Hopping windows</a></li> 
+</ul> 
+ 
+<p>For example, you may want to calculate the average speed of drivers within a certain distance from a customer's pickup location, over a rolling window of the past 10 minutes. In this case, your SQL query might look something like this:<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>SELECT</span> <span>customer_data</span><span>.</span><span>*</span><span>,</span> <span>AVG</span><span>(</span><span>driver_data</span><span>.</span><span>speed</span><span>)</span> <span>AS</span> <span>avg_speed</span> 
+<span>FROM</span> <span>customer_data</span> 
+<span>JOIN</span> <span>driver_data</span> 
+<span>ON</span> <span>ST_DISTANCE</span><span>(</span><span>driver_data</span><span>.</span><span>location</span><span>,</span> <span>customer_data</span><span>.</span><span>pickup_location</span><span>)</span> <span>&lt;</span> <span>5</span> 
+<span>GROUP</span> <span>BY</span> <span>TUMBLE</span><span>(</span><span>customer_data</span><span>.</span><span>event_time</span><span>,</span> <span>INTERVAL</span> <span>'10'</span> <span>MINUTE</span><span>),</span> <span>customer_data</span><span>.</span><span>customer_id</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p><strong>Result:</strong></p> 
+ 
+<div><table> 
+<thead> 
+<tr> 
+<th>customer_id</th> 
+<th>pickup_location</th> 
+<th>destination</th> 
+<th>event_time</th> 
+<th>avg_speed</th> 
+</tr> 
+</thead> 
+<tbody> 
+<tr> 
+<td>201</td> 
+<td>San Francisco</td> 
+<td>Palo Alto</td> 
+<td>2023-04-01 10:30:00</td> 
+<td>60.0</td> 
+</tr> 
+<tr> 
+<td>203</td> 
+<td>Los Angeles</td> 
+<td>Santa Monica</td> 
+<td>2023-04-01 10:31:00</td> 
+<td>45.0</td> 
+</tr> 
+<tr> 
+<td>202</td> 
+<td>New York</td> 
+<td>Brooklyn</td> 
+<td>2023-04-01 10:33:00</td> 
+<td>50.0</td> 
+</tr> 
+</tbody> 
+</table></div> 
+ 
+<p>This query would select all fields from the customer data stream and calculate the average speed of drivers within 5 km of the customer's pickup location. In this query, the <strong><code>TUMBLE()</code></strong> function is used to group the data into tumbling time windows of 10 minutes. The <strong><code>GROUP BY</code></strong> clause aggregates the data within each time window and for each customer separately.</p> 
+ 
+<h3> 
+   
+   
+  Write merged streams to a materialized view 
+</h3> 
+ 
+<p>With the RisingWave streaming database, you can also <strong>create materialized views</strong> for joined streams. A materialized view is a precomputed snapshot of data that is stored as a table in the streaming database. Materialized views can be particularly useful because they allow you to combine and aggregate data from multiple streams into a single table and the streaming database computes the query results on the fly and updates the virtual table as new data arrives. This can simplify complex queries, improve overall system performance, and responsiveness and provide a more comprehensive view of the data that's easier to work with.</p> 
+ 
+<p>In RisingWave, you need to use the <a href="https://www.risingwave.dev/docs/current/sql-create-mv/">CREATE MATERIALIZED VIEW</a> statement to create a materialized source. Here's an example of a materialized view that can be created by merging the <strong><code>Driver</code></strong> and <strong><code>Rider</code></strong> streams in the ride-sharing data example above.<br> 
+</p> 
+ 
+<div> 
+<pre><code><span>CREATE</span> <span>MATERIALIZED</span> <span>VIEW</span> <span>most_active_drivers</span> <span>AS</span> 
+<span>SELECT</span> <span>drivers</span><span>.</span><span>driver_id</span><span>,</span> <span>drivers</span><span>.</span><span>location</span><span>,</span> <span>drivers</span><span>.</span><span>rating</span><span>,</span> <span>COUNT</span><span>(</span><span>rides</span><span>.</span><span>ride_id</span><span>)</span> <span>as</span> <span>total_rides</span> 
+<span>FROM</span> <span>drivers</span> 
+<span>JOIN</span> <span>rides</span> 
+<span>ON</span> <span>drivers</span><span>.</span><span>driver_id</span> <span>=</span> <span>rides</span><span>.</span><span>driver_id</span> 
+<span>WHERE</span> <span>drivers</span><span>.</span><span>location</span> <span>=</span> <span>'San Francisco'</span> 
+<span>GROUP</span> <span>BY</span> <span>drivers</span><span>.</span><span>driver_id</span><span>,</span> <span>drivers</span><span>.</span><span>location</span><span>,</span> <span>drivers</span><span>.</span><span>rating</span> 
+<span>ORDER</span> <span>BY</span> <span>total_rides</span> <span>DESC</span> 
+</code></pre> 
+ 
+</div> 
+ 
+ 
+ 
+<p>The materialized view result:</p> 
+ 
+<div><table> 
+<thead> 
+<tr> 
+<th>driver_id</th> 
+<th>location</th> 
+<th>rating</th> 
+<th>total_rides</th> 
+</tr> 
+</thead> 
+<tbody> 
+<tr> 
+<td>101</td> 
+<td>San Francisco</td> 
+<td>4</td> 
+<td>2</td> 
+</tr> 
+<tr> 
+<td>104</td> 
+<td>San Francisco</td> 
+<td>3</td> 
+<td>1</td> 
+</tr> 
+</tbody> 
+</table></div> 
+ 
+<h2> 
+   
+   
+  Takeaways 
+</h2> 
+ 
+<ul> 
+<li>With a streaming database, you can join two or multiple streams by ingesting them from different data sources.</li> 
+<li>You can join tables by table <a href="https://www.risingwave.dev/docs/current/query-syntax-from-clause/">reference</a>, <a href="https://www.risingwave.dev/docs/current/query-syntax-from-clause/#joined-tables">type</a>, and table functions like JOIN.</li> 
+<li>It is also possible to join multiple streams based on a time window using the window joins functions like Tumble or Hop.</li> 
+<li>The resulting stream would contain the combined data from all streams which means this operation performs expensive calculations. In this case, you can create a materialized view to speed up query performance.</li> 
+</ul> 
+ 
+<h3> 
+   
+   
+  Related resources 
+</h3> 
+ 
+<ul> 
+<li><a href="https://www.risingwave.com/blog/shared-indexes-and-joins-in-streaming-databases/#checkpointing-in-risingwave">Shared Indexes and Joins in Streaming Databases</a></li> 
+<li> 
+<a href="https://medium.com/@bumurzaqov2/how-change-data-capture-cdc-works-with-streaming-database-dc5fd21ae5d6">How Change Data Capture (CDC) Works with Streaming Database</a>.</li> 
+<li> 
+<a href="https://www.iambobur.com/post/query-real-time-data-in-kafka-using-sql">Query Real-Time Data in Kafka Using SQL</a>.</li> 
+</ul> 
+ 
+<h3> 
+   
+   
+  Recommended content 
+</h3> 
+ 
+<ul> 
+<li><a href="https://www.risingwave-labs.com/blog/is-risingwave-the-right-streaming-database/#durability">Is RisingWave the Right Streaming Database?</a></li> 
+<li><a href="https://www.risingwave-labs.com/blog/Rethinking_stream_processing_and_streaming_databases/">Rethinking Stream Processing and Streaming Databases</a></li> 
+</ul> 
+ 
+<h3> 
+   
+   
+  Community 
+</h3> 
+ 
+<p>🙋 <a href="https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw">Join the Risingwave Community</a></p> 
+ 
+<h3> 
+   
+   
+  About the author 
+</h3> 
+ 
+<p>Visit my personal blog: <a href="https://www.iambobur.com/">www.iambobur.com</a></p>]]></description>
+<pubDate>Sun, 07 May 2023 14:59:00 +0000</pubDate>
+<category>Programming</category>
+<dc:creator>Bobur Umurzokov</dc:creator>
+<source url="http://dev.to/">The Practical Developer</source>
+<guid isPermaLink="false">http://www.inoreader.com/article/3a9c6e751625b780</guid>
+</item>
+</channel>
+</rss>

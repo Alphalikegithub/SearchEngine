@@ -1,0 +1,232 @@
+<!-- 这是一个搜索引擎的 HTML、CSS 和 JavaScript 代码。它包含一个搜索框和一个搜索结果区域。当用户在搜索框中输入关键字并点击搜索按钮
+时，JavaScript 代码会向后端发送请求，并在搜索结果区域中显示搜索结果。此外，该搜索框还支持自动提示功能，当用户在搜索框中输入时，它会显示
+可能的搜索建议。用户可以选择下拉列表中的一个建议，直接进行搜索。
+
+HTML 代码包括一个容器 div，其中包含一个搜索框 div 和一个搜索结果区域 div。搜索框 div 包含一个输入框 input、一个搜索按钮 button 和
+一个下拉列表 div，下拉列表 div 用于显示搜索建议。
+CSS 代码用于设置搜索框和搜索结果区域的样式，包括宽度、高度、边框、字体、背景等等。它还包括下拉列表的样式，例如它的位置、背景、边框、
+边框半径和 z-index。
+
+JavaScript 代码包括以下几个部分：
+1. 获取搜索框、搜索按钮和搜索结果区域的引用。
+2. 当搜索按钮被点击时，向后端发送请求并显示搜索结果。在这个处理程序中，我们首先从搜索框中提取关键字，然后使用 fetch() 函数向后端发送
+GET 请求，并在响应中处理搜索结果。最后，我们将搜索结果显示在搜索结果区域中。
+3. 当搜索框中的文本发生更改时，发送自动完成请求并显示下拉列表。在这个处理程序中，我们首先从搜索框中提取关键字，然后使用 fetch() 函数
+向后端发送 GET 请求，并在响应中处理搜索建议。最后，我们将搜索建议显示在下拉列表中，并将下拉列表显示在搜索框下方。
+
+这个搜索引擎是一个基本的示例，但它展示了一个完整的搜索引擎如何工作的基本思想和要点。 -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"> 
+    <title>搜索引擎</title>
+    <style>
+      body {
+      	width:100%;
+	    height: 100%;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .title {
+        text-align :center;
+      }
+     .page_bg {
+      	width:100%;
+	    height: 100%;
+        background-image: url(https://i.328888.xyz/2023/05/10/iYlQDz.jpeg);
+        background-repeat: no-repeat;
+	      background-size: cover;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .search-box {
+        position: relative; /* 确保父元素可以作为下拉列表的参考 */
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .search-input {
+        flex-grow: 1;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-right: 10px;
+      }
+      .search-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #0077cc;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .search-results {
+        margin-top: 20px;
+        height:900px;
+      }
+      .result {
+        margin-bottom: 10px;
+      }
+      .result-title {
+        font-weight: bold;
+      }
+      .result-url {
+        color: #0077cc;
+      }
+      .result-description {
+        margin-top: 5px;
+        font-size: 14px;
+        color: #666;
+      }
+      /* 渲染suggestion下拉列表 */
+      .suggestions {
+        position: absolute;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto; /* 允许滚动 */
+        /* margin-top: 5px; 调整下拉框与输入框的距离 */
+        top: calc(100% + 5px); /* 位于搜索框正下方 */
+        left: 0; /* 左对齐 */
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        z-index: 10; /* 将 z-index 设置为 0 */
+        display: none; /* 默认情况下隐藏扩展列表 */
+      }
+
+      .suggestions .suggestion {
+        padding: 5px;
+        cursor: pointer;
+      }
+
+      .suggestions .suggestion:hover,
+      .suggestions .suggestion:focus {
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body class="body">
+    <div class="page_bg">
+      <div class="container">
+        <div class="title">
+            <h1>轻量级搜索引擎</h1>
+        </div>
+        <div class="search-box">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="请输入搜索关键字"
+          />
+          <button class="search-button">搜索</button>
+          <div class="suggestions"></div>
+        </div>
+        <div class="search-results"></div>
+    </div>
+</div>
+    <script>
+      // JavaScript代码，用于向后端发送请求并显示搜索结果
+      const searchInput = document.querySelector(".search-input");
+      const searchButton = document.querySelector(".search-button");
+      const searchResults = document.querySelector(".search-results");
+      const suggestions = document.querySelector(".suggestions");
+
+      // 当搜索按钮被点击时，向后端发送请求并显示搜索结果
+      searchButton.addEventListener("click", () => {
+        const keyword = searchInput.value.trim();
+        if (keyword) {
+          fetch(
+            `http://127.0.0.1:1234/search?keyword=${encodeURIComponent(
+              keyword
+            )}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              const results = data.msg; // assuming the response array is contained within the "msg" property
+
+              // 检查results是否是数组并判断长度是否大于0
+              if (Array.isArray(results) && results.length > 0) {
+                searchResults.innerHTML = "";
+                results.forEach((result) => {
+                  const resultElement = document.createElement("div");
+                  resultElement.className = "result";
+                  resultElement.innerHTML = `
+								<div class="result-title">${result.title}</div>
+								<div class="result-url"><a href="${result.url}" target="_blank">${result.url}</a></div>
+								<div class="result-description">${result.summary}</div> 
+								`;
+                // assuming the description property is actually called "summary"
+                  searchResults.appendChild(resultElement);
+                });
+              } else {
+                searchResults.innerHTML = data.msg;
+              }
+            })
+            .catch((error) => {
+              searchResults.innerHTML = "搜索失败：" + error.message;
+            });
+        }
+      });
+
+      searchInput.addEventListener("input", () => {
+        const keyword = searchInput.value.trim();
+        if (keyword) {
+          fetch(
+            `http://127.0.0.1:1234/suggestions?keyword=${encodeURIComponent(
+              keyword
+            )}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              showSuggestions(data.suggestion);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        } else {
+          hideSuggestions();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+      // 判断点击的元素是否为建议列表或者建议输入框
+      if (
+        event.target !== suggestions &&
+        event.target !== searchInput &&
+        event.target.parentNode !== suggestions &&
+        event.target.parentNode !== searchInput
+      ) {
+        hideSuggestions(); // 隐藏建议列表
+      }
+      });
+
+      function showSuggestions(suggestionsData) {
+        suggestions.innerHTML = ""; // 清空建议列表
+        suggestionsData.forEach((suggestion) => {
+          const suggestionElement = document.createElement("div");
+          suggestionElement.className = "suggestion";
+          suggestionElement.textContent = suggestion;
+          suggestionElement.addEventListener("click", () => {
+            searchInput.value = suggestion; // 将建议关键字填充到搜索框中
+            hideSuggestions(); // 隐藏建议列表
+            performSearch(suggestion); // 执行搜索操作
+          });
+          suggestions.appendChild(suggestionElement);
+        });
+        suggestions.style.display = "block"; // 显示建议列表
+      }
+
+      function hideSuggestions() {
+        suggestions.innerHTML = "";
+        suggestions.style.display = "none"; // 隐藏建议列表
+      }
+    </script>
+  </body>
+</html>

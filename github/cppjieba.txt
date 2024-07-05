@@ -1,0 +1,8 @@
+// https://github.com/yanyiwu/cppjieba
+//下载和编译
+git clone --depth=10 --branch=master git://github.com/yanyiwu/cppjieba.git
+cd cppjieba
+mkdir build
+cd build
+cmake ..
+make

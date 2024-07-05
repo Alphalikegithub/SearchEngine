@@ -1,0 +1,7 @@
+// https://github.com/yanyiwu/simhash
+// 编译安装
+mkdir build
+cd build
+cmake ..
+make
+./demo

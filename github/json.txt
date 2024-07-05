@@ -1,0 +1,7 @@
+https://github.com/nlohmann/json
+//编译安装
+mkdir build
+cd build
+cmake ..
+make
+sudo make install

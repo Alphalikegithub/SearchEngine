@@ -1,0 +1,8 @@
+git clone https://github.com/sewenew/redis-plus-plus.git
+cd redis-plus-plus
+mkdir build
+cd build
+cmake -DREDIS_PLUS_PLUS_CXX_STANDARD=17 .. #使用C++17版本，C++11/14则修改为
+11/14
+make
+sudo make install
