@@ -1,7 +1,7 @@
 ## 其余变量
 VER:=release ## 调试选项
 OPTM:=elide ## 构造器优化选项
-STD:=c++14
+STD:=c++17 ## C++标准
 CPP:=g++
 
 ## 头文件

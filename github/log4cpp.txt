@@ -20,3 +20,11 @@ make distclean
 3、然后重新编译：
 make
 这会强制使用 C++11 标准，兼容 throw(...) 的老语法。
+---
+或者试试以下方案：
+git clone https://git.code.sf.net/p/log4cpp/codegit log4cpp
+cd log4cpp
+./autogen.sh
+./configure
+make
+sudo make install
