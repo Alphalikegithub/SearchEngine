@@ -1,0 +1,22 @@
+//https://log4cpp.sourceforge.net/
+//下载log4cpp-1.1.1.tar.gz
+/安装：先将1og4cpp-1.1.1.tar.gz拖入用户主目录(~)，
+//然后再执行以下步骤：
+tar zxvf log4cpp-1.1.1.tar.gz
+cd ~/log4cpp/
+./configure  
+make
+make check
+sudo make install
+
+----------可能遇到的问题----------
+ log4cpp 使用了过时的 C++ 异常规范语法（即 throw(...)），
+ 而 在 C++17 中已被废弃并被完全移除，所以 GCC 报错不允许继续编译。
+解决方案：
+1、清理之前的配置（推荐）：
+make distclean
+2、重新 configure，并加上 CXXFLAGS 设置：
+./configure CXXFLAGS="-std=c++11"
+3、然后重新编译：
+make
+这会强制使用 C++11 标准，兼容 throw(...) 的老语法。
